@@ -5,3 +5,4 @@ socket这个东西只是帮你实现网络通信的模块
 socket这个是内置模块 不需要你安装
 sk = socket.socket()
 sk.bind()
+我们先来试试windows的push命令有没有问题
