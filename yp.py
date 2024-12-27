@@ -46,7 +46,7 @@ if json_dic['want'] == 'shangchuan':
             content = conn.recv(1024)
             f.write(content)
             sum_recv_len = sum_recv_len + len(content)
-            print('当前已写入'+str(sum_recv_len)+'字节')
+            print('\r当前已写入'+str(sum_recv_len)+'字节',end="")
 # ----------------下载逻辑--------------------
 else:
     folder_path = '/data/database/'
