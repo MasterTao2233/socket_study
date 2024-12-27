@@ -4,6 +4,7 @@ import struct
 import hashlib
 import importlib
 import sys
+import os
 def get_md5(username,password):
     md5 = hashlib.md5(username.encode('utf-8'))
     md5.update(password.encode('utf-8'))
@@ -37,6 +38,7 @@ json_size = conn.recv(4)
 json_bag = conn.recv(struct.unpack('i',json_size)[0])
 json_dic = json.loads(json_bag.decode('utf-8'))
 print(json_dic)
+# ----------上传逻辑-------------------
 if json_dic['want'] == 'shangchuan':
     sum_recv_len = 0
     with open('/data/database/'+json_dic['file_name'],mode='wb') as f:
@@ -45,15 +47,27 @@ if json_dic['want'] == 'shangchuan':
             f.write(content)
             sum_recv_len = sum_recv_len + len(content)
             print('当前已写入'+str(sum_recv_len)+'字节')
-
-
-
-    
-
-
+# ----------------下载逻辑--------------------
 else:
-    pass
-print(type(json_dic))
+    folder_path = '/data/database/'
+    entries = os.listdir(folder_path)
+    entries_json = json.dumps(entries)
+    entries_json_encode = entries_json.encode('utf-8')
+    ret = struct.pack('i',len(entries_json_encode))
+    conn.send(ret)
+    conn.send(entries_json_encode)
+    json_size = conn.recv(4)
+    json_bag = conn.recv(struct.unpack('i',json_size)[0])
+    option =json.loads(json_bag.decode('utf-8'))
+    option['filesize'] = os.path.getsize('/data/database/'+option['file_name'])
+    option_json_encode = json.dumps(option).encode('utf-8')
+    ret = struct.pack('i',len(option_json_encode))
+    conn.send(ret)
+    conn.send(option_json_encode)
+    print(option)
+    with open('/data/database/'+option['file_name'],mode='rb') as f:
+        content = f.read()
+        conn.send(content)
 conn.close()
 sk.close()
 
