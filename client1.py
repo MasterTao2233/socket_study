@@ -20,10 +20,10 @@ if not sdic['result']:
 	print('密码错误,登录失败')
 	sk.close()
 	sys.exit()
-option = {'file_name':'re0第一集','file_size':143413,'want':'shangorxia'}
+
 want = input('请选择你要上传还是下载,上传输入1，下载输入2')
 if want == '1':
-	option['want'] = 'shangchuan'
+	option = {'file_name':'re0第一集','file_size':143413,'want':'shangchuan'}
 	file_path = input('请输入文件路径:')
 	filename = os.path.basename(file_path)
 	filesize = os.path.getsize(file_path)
@@ -40,12 +40,38 @@ if want == '1':
 		sk.send(content)
 	sk.close()
 else:
-	option['want'] = 'xiazai'
-	file_path = input('请输入文件路径:')
+	option = {'want':'xiazai'}
 	json_option = json.dumps(option)
 	json_option_code = json_option.encode('utf-8')
 	json_option_code_size = len(json_option_code)
 	ret = struct.pack('i',json_option_code_size)
 	sk.send(ret)
 	sk.send(json_option_code)
+	json_size = sk.recv(4)
+	json_bag = sk.recv(struct.unpack('i',json_size)[0])
+	entries = json.loads(json_bag.decode('utf-8'))
+	print('目前数据库中可供下载的文件有:\n')
+	for entry in entries:
+		 print(entry)
+	file_name = input('请输入您要下载的文件名:\n')
+	option['file_name'] = file_name
+	json_option = json.dumps(option)
+	json_option_code = json_option.encode('utf-8')
+	json_option_code_size = len(json_option_code)
+	ret = struct.pack('i',json_option_code_size)
+	sk.send(ret)
+	sk.send(json_option_code)
+	option_size = sk.recv(4)
+	option_bag = sk.recv(struct.unpack('i',option_size)[0])
+	option  = json.loads(option_bag.decode('utf-8'))
+	dir_name = input('请输入您要存储的文件夹路径:\n')
+	full_path = os.path.join(dir_name,option['file_name'])
+	with open(full_path,mode='wb') as f:
+		write_len = 0
+		while write_len !=option['filesize']:
+			wf = sk.recv(option['filesize'])
+			f.write(wf)
+			write_len = write_len + len(wf)
+			print('\r当前已下载'+str(write_len)+'字节',end="")
+	print('下载完毕')
 	sk.close()
